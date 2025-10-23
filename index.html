@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎉 Doğum Günü Geri Sayım</title>
+  <meta name="description" content="Doğum gününe kalan süreyi hesaplayan, sarı-lacivert temalı tek sayfa uygulama." />
+  <meta name="theme-color" content="#0a1e5a" />
+  <style>
+    :root{
+      /* Fenerbahçe renkleri */
+      --navy:#0a1e5a; /* lacivert */
+      --yellow:#ffd100; /* sarı */
+      --navy-2:#082049;
+      --glass: rgba(255,255,255,.12);
+      --stroke: rgba(255,255,255,.28);
+      --text:#f8fafc;
+      --text-dim:#cbd5e1;
+      --accent:#ffd100;
+      --ok:#22c55e;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(255,209,0,.16), transparent 60%), linear-gradient(140deg, var(--navy), var(--navy-2) 60%);
+      display:grid; place-items:center; padding:24px;
+    }
+    .container{width:min(960px,100%); display:grid; gap:20px}
+    .card{backdrop-filter: blur(10px); background: var(--glass); border:1px solid var(--stroke); border-radius:24px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    header{text-align:center}
+    h1{margin:0; font-size: clamp(1.4rem, 1rem + 2vw, 2rem)}
+    .subtitle{opacity:.9; color:var(--text-dim)}
+
+    .form{display:grid; grid-template-columns:1.2fr repeat(3, .8fr) .8fr; gap:12px; margin-top:16px; align-items:end}
+    .field{display:grid; gap:6px}
+    label{font-size:.9rem; color:var(--text-dim)}
+    input, select, button{
+      height:44px; border-radius:12px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text); padding:0 12px; font-size:1rem; outline:none;
+    }
+    input::placeholder{color:#e2e8f0aa}
+    button{cursor:pointer; font-weight:700; letter-spacing:.3px; background: linear-gradient(135deg, var(--yellow), #ffe257); color:#111827; border:1px solid rgba(0,0,0,.12)}
+    button:hover{filter:brightness(1.02)}
+
+    .countdown-card{text-align:center; display:grid; gap:14px}
+    .name-line{font-size: clamp(1rem, .8rem + 1vw, 1.15rem)}
+    .name-line strong{color:var(--accent)}
+    .age-line{font-size:.95rem; color:var(--text-dim)}
+
+    .timer{display:grid; grid-template-columns:repeat(4, minmax(80px, 1fr)); gap:14px}
+    .time-block{padding:14px; border-radius:16px; background:rgba(255,255,255,.08); border:1px solid var(--stroke)}
+    .num{font-size:clamp(1.4rem, 1.1rem + 3.8vw, 3.4rem); font-weight:800; font-variant:tabular-nums}
+    .label{opacity:.85; text-transform:uppercase; letter-spacing:.14em; font-size:.75rem}
+
+    .progress{height:6px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:8px}
+    .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--yellow), #fff1a6)}
+
+    .done{font-size: clamp(1.1rem, 1rem + 1.8vw, 2rem); color:var(--ok); font-weight:700}
+    footer{text-align:center; opacity:.85}
+
+    @media (max-width:780px){
+      .form{grid-template-columns:1fr 1fr 1fr 1fr;}
+      .form .field:nth-child(1){grid-column:1 / -1}
+      .timer{grid-template-columns:repeat(2, minmax(100px, 1fr))}
+    }
+
+    /* Basit konfeti */
+    .confetti{pointer-events:none; position:fixed; inset:0; overflow:hidden}
+    .confetti i{position:absolute; top:-10px; width:10px; height:14px; background:#fff; opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header>
+        <h1>🎂 Doğum Gününe Geri Sayım</h1>
+        <div class="subtitle">İsim, doğum günü (gün/ay) ve doğum yılını gir.</div>
+      </header>
+      <div class="form">
+        <div class="field">
+          <label>İsim (isteğe bağlı)</label>
+          <input id="name" type="text" placeholder="Örn: Elif" />
+        </div>
+        <div class="field">
+          <label>Gün</label>
+          <select id="day"></select>
+        </div>
+        <div class="field">
+          <label>Ay</label>
+          <select id="month"></select>
+        </div>
+        <div class="field">
+          <label>Doğum Yılı</label>
+          <select id="year"></select>
+        </div>
+        <button id="save">Kaydet / Başlat</button>
+      </div>
+    </div>
+
+    <div class="card countdown-card" id="countdownCard" hidden>
+      <div class="name-line">🎈 <strong id="friendName">Arkadaşın</strong> için ilk gelen doğum gününe geri sayım!</div>
+      <div class="age-line" id="ageLine">&nbsp;</div>
+      <div class="timer" aria-live="polite">
+        <div class="time-block"><div class="num" id="d">00</div><div class="label">Gün</div><div class="progress"><div class="bar" id="pd"></div></div></div>
+        <div class="time-block"><div class="num" id="h">00</div><div class="label">Saat</div><div class="progress"><div class="bar" id="ph"></div></div></div>
+        <div class="time-block"><div class="num" id="m">00</div><div class="label">Dakika</div><div class="progress"><div class="bar" id="pm"></div></div></div>
+        <div class="time-block"><div class="num" id="s">00</div><div class="label">Saniye</div><div class="progress"><div class="bar" id="ps"></div></div></div>
+      </div>
+      <div class="done" id="done" hidden>🎉 İyi ki doğdun <span id="doneName"></span>! 🎉</div>
+    </div>
+
+    <footer>
+      <span> — Made by Ayhan Taşdemir — <span id="footerName"></span>
+    </footer>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    // Yardımcı
+    const $ = (q)=>document.querySelector(q);
+    const pad = (n)=>String(n).padStart(2,'0');
+
+    // Gün/Ay/Yıl doldur
+    (function fillSelectors(){
+      const daySel = $('#day');
+      for(let d=1; d<=31; d++){ const o=document.createElement('option'); o.value=o.textContent=d; daySel.appendChild(o); }
+      const monthSel = $('#month');
+      const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+      months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i+1; o.textContent=m; monthSel.appendChild(o); });
+      const yearSel = $('#year');
+      const thisYear = new Date().getFullYear();
+      for(let y=thisYear; y>=thisYear-100; y--){ const o=document.createElement('option'); o.value=o.textContent=y; yearSel.appendChild(o); }
+    })();
+
+    function nextBirthdayDate(day, month){
+      // month: 1-12, day: 1-31
+      const now = new Date();
+      const year = now.getFullYear();
+      // Şubat 29 durumu: eğer seçili gün 29 ve ay 2 ise, artık olmayan yıllarda 28'e düş
+      const safeDay = (month==2 && day>28 && !isLeap(year)) ? 28 : Math.min(day, daysInMonth(year, month));
+      let target = new Date(year, month-1, safeDay, 0,0,0,0);
+      if(target < now){
+        const nextYear = year + 1;
+        const safeDay2 = (month==2 && day>28 && !isLeap(nextYear)) ? 28 : Math.min(day, daysInMonth(nextYear, month));
+        target = new Date(nextYear, month-1, safeDay2, 0,0,0,0);
+      }
+      return target;
+    }
+    function isLeap(y){ return (y%4===0 && y%100!==0) || (y%400===0) }
+    function daysInMonth(y,m){ return new Date(y, m, 0).getDate(); }
+
+    // Konfeti
+    function blastConfetti(){
+      const wrap = $('#confetti');
+      wrap.innerHTML = '';
+      const count = 120;
+      for(let i=0;i<count;i++){
+        const piece = document.createElement('i');
+        piece.style.left = Math.random()*100 + 'vw';
+        piece.style.background = `hsl(${Math.random()*360},85%,65%)`;
+        const dur = 4 + Math.random()*3;
+        const delay = Math.random();
+        piece.animate([
+          { transform:`translateY(-10px) rotate(0deg)` , opacity:1},
+          { transform:`translateY(110vh) rotate(${Math.random()*720-360}deg)` , opacity:1}
+        ], {duration: dur*1000, delay: delay*300, easing:'cubic-bezier(.2,.6,.2,1)'});
+        wrap.appendChild(piece);
+      }
+      setTimeout(()=> wrap.innerHTML = '', 8000);
+    }
+
+    let ticker = null;
+    function startCountdown(targetDate, name, birthYear){
+      $('#countdownCard').hidden = false;
+      clearInterval(ticker);
+      const titleName = name || 'Arkadaşın';
+      $('#friendName').textContent = titleName;
+      $('#footerName').textContent = `${titleName}, az kaldı dayan dostum.`;
+
+      // Basacağı yaşı hesapla ve göster
+      const ageNext = targetDate.getFullYear() - birthYear;
+      $('#ageLine').textContent = `${ageNext}. yaşına kalan:`;
+
+      const startTotalDays = Math.max(1, Math.ceil((targetDate - new Date()) / 86400000));
+      function tick(){
+        const now = new Date();
+        const diff = targetDate - now;
+        if(diff <= 0){
+          clearInterval(ticker);
+          ['d','h','m','s'].forEach(id=>$('#'+id).textContent='00');
+          ['pd','ph','pm','ps'].forEach(id=>$('#'+id).style.width='100%');
+          $('#done').hidden = false;
+          $('#doneName').textContent = titleName;
+          blastConfetti();
+          return;
+        }
+        const sec = Math.floor(diff/1000);
+        const days = Math.floor(sec/86400);
+        const hours = Math.floor((sec%86400)/3600);
+        const mins = Math.floor((sec%3600)/60);
+        const secs = sec%60;
+        $('#d').textContent = pad(days);
+        $('#h').textContent = pad(hours);
+        $('#m').textContent = pad(mins);
+        $('#s').textContent = pad(secs);
+        $('#ps').style.width = (secs/60*100).toFixed(1)+'%';
+        $('#pm').style.width = (mins/60*100).toFixed(1)+'%';
+        $('#ph').style.width = (hours/24*100).toFixed(1)+'%';
+        const totalDays = Math.max(1, Math.ceil((targetDate - now)/86400000));
+        $('#pd').style.width = (100 - (totalDays/startTotalDays*100)).toFixed(1)+'%';
+      }
+      tick();
+      ticker = setInterval(tick, 1000);
+    }
+
+    $('#save').addEventListener('click', ()=>{
+      const name = $('#name').value.trim();
+      const day = parseInt($('#day').value, 10);
+      const month = parseInt($('#month').value, 10);
+      const year = parseInt($('#year').value, 10);
+      if(!day || !month || !year){ alert('Lütfen gün, ay ve yılı seçin.'); return; }
+      const target = nextBirthdayDate(day, month);
+      // Saat 00:00 yerel
+      target.setHours(0,0,0,0);
+      // Başlat
+      $('#done').hidden = true;
+      startCountdown(target, name, year);
+    });
+  </script>
+</body>
+</html>
