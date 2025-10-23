@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🎉 Doğum Günü Geri Sayım</title>
-  <meta name="description" content="Doğum gününe kalan süreyi hesaplayan nevişahsına münasır uygulama." />
+  <meta name="description" content="Doğum gününe kalan süreyi hesaplayan, sarı-lacivert temalı tek sayfa uygulama." />
   <meta name="theme-color" content="#0a1e5a" />
   <style>
     :root{
@@ -20,7 +20,7 @@
       --ok:#22c55e;
     }
     *{box-sizing:border-box}
-    html,body{height:100%; width:100%; max-width:100vw; overflow-x:hidden;}
+    html,body{height:100%; width:100%; max-width:100vw; overflow-x:clip;}
     body{
       margin:0; color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
       background: radial-gradient(1200px 800px at 20% 10%, rgba(255,209,0,.16), transparent 60%), linear-gradient(140deg, var(--navy), var(--navy-2) 60%);
@@ -48,7 +48,7 @@
     .name-line strong{color:var(--accent)}
     .age-line{font-size:.95rem; color:var(--text-dim)}
 
-    .timer{display:grid; grid-template-columns:repeat(4, minmax(76px, 1fr)); gap:14px}
+    .timer{display:grid; width:100%; grid-template-columns:repeat(4, minmax(76px, 1fr)); gap:14px}
     .time-block{padding:14px; border-radius:16px; background:rgba(255,255,255,.08); border:1px solid var(--stroke); min-width:0}
     .num{font-size:clamp(1.4rem, 1.1rem + 3.8vw, 3.4rem); font-weight:800; font-variant:tabular-nums}
     .label{opacity:.85; text-transform:uppercase; letter-spacing:.14em; font-size:.75rem}
@@ -67,7 +67,7 @@
 
     /* Basit konfeti */
     .confetti{pointer-events:none; position:fixed; inset:0; overflow:hidden}
-    .confetti i{position:absolute; top:-10px; width:10px; height:14px; background:#fff; opacity:.9}
+    .confetti i{position:absolute; top:-10px; width:8px; height:14px; background:#fff; opacity:.9}
   </style>
 </head>
 <body>
@@ -94,12 +94,12 @@
           <label>Doğum Yılı</label>
           <select id="year"></select>
         </div>
-        <button id="save">Başlat</button>
+        <button id="save">Kaydet / Başlat</button>
       </div>
     </div>
 
     <div class="card countdown-card" id="countdownCard" hidden>
-      <div class="name-line">🎈 <strong id="friendName">Arkadaşın</strong> için doğum gününe geri sayım!</div>
+      <div class="name-line">🎈 <strong id="friendName">Arkadaşın</strong> için ilk gelen doğum gününe geri sayım!</div>
       <div class="age-line" id="ageLine">&nbsp;</div>
       <div class="timer" aria-live="polite">
         <div class="time-block"><div class="num" id="d">00</div><div class="label">Gün</div><div class="progress"><div class="bar" id="pd"></div></div></div>
@@ -111,7 +111,7 @@
     </div>
 
     <footer>
-      <span> — Made by Ayhan Taşdemir — <span id="footerName"></span>
+      <span>Made with ♥︎ — <span id="footerName">Bu dosyayı kaydedip çift tıklaman yeterli.</span></span>
     </footer>
   </div>
 
@@ -158,7 +158,8 @@
       const count = 120;
       for(let i=0;i<count;i++){
         const piece = document.createElement('i');
-        piece.style.left = (Math.random()*98) + 'vw';
+        const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        piece.style.left = (Math.random() * (vw - 12)) + 'px';
         piece.style.background = `hsl(${Math.random()*360},85%,65%)`;
         const dur = 4 + Math.random()*3;
         const delay = Math.random();
@@ -177,7 +178,7 @@
       clearInterval(ticker);
       const titleName = name || 'Arkadaşın';
       $('#friendName').textContent = titleName;
-      $('#footerName').textContent = `${titleName}, az kladı dayan...`;
+      $('#footerName').textContent = `${titleName} için bu dosyayı kaydedip çift tıklaman yeterli.`;
 
       // Basacağı yaşı hesapla ve göster
       const ageNext = targetDate.getFullYear() - birthYear;
